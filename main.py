@@ -1,7 +1,8 @@
-import pygame
 import random
 import sys
 from typing import Dict, List, Tuple
+
+import pygame
 
 # ============================
 # Game Constants
@@ -31,13 +32,13 @@ LIGHT_GRAY = (80, 80, 80)
 
 # Tetromino colors
 COLORS = {
-    'I': (0, 255, 255),   # Cyan
-    'O': (255, 255, 0),   # Yellow
-    'T': (128, 0, 128),   # Purple
-    'S': (0, 255, 0),     # Green
-    'Z': (255, 0, 0),     # Red
-    'J': (0, 0, 255),     # Blue
-    'L': (255, 165, 0),   # Orange
+    "I": (0, 255, 255),  # Cyan
+    "O": (255, 255, 0),  # Yellow
+    "T": (128, 0, 128),  # Purple
+    "S": (0, 255, 0),  # Green
+    "Z": (255, 0, 0),  # Red
+    "J": (0, 0, 255),  # Blue
+    "L": (255, 165, 0),  # Orange
 }
 
 # ============================
@@ -54,14 +55,15 @@ I_SHAPE = [(0, 0), (-1, 0), (1, 0), (2, 0)]  # pivot on second block from left
 O_SHAPE = [(0, 0), (1, 0), (0, -1), (1, -1)]
 
 SHAPES: Dict[str, List[Tuple[int, int]]] = {
-    'I': I_SHAPE,
-    'O': O_SHAPE,
-    'T': T_SHAPE,
-    'S': S_SHAPE,
-    'Z': Z_SHAPE,
-    'J': J_SHAPE,
-    'L': L_SHAPE,
+    "I": I_SHAPE,
+    "O": O_SHAPE,
+    "T": T_SHAPE,
+    "S": S_SHAPE,
+    "Z": Z_SHAPE,
+    "J": J_SHAPE,
+    "L": L_SHAPE,
 }
+
 
 # ============================
 # Helper Data Structures
@@ -84,16 +86,20 @@ class Piece:
             # rotate clockwise: (x, y) -> (y, -x)
             cells = [(y, -x) for (x, y) in cells]
         # O piece does not effectively rotate (but above also maintains square)
-        if self.shape_key == 'O':
+        if self.shape_key == "O":
             return O_SHAPE[:]
         return cells
 
-    def absolute_positions(self, rotation: int = None, dx: int = 0, dy: int = 0) -> List[Tuple[int, int]]:
+    def absolute_positions(
+        self, rotation: int = None, dx: int = 0, dy: int = 0
+    ) -> List[Tuple[int, int]]:
         cells = self.rotated_cells(rotation)
         return [(self.x + dx + cx, self.y + dy + cy) for (cx, cy) in cells]
 
 
-def create_grid(locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]]) -> List[List[Tuple[int, int, int]]]:
+def create_grid(
+    locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]],
+) -> List[List[Tuple[int, int, int]]]:
     grid = [[BLACK for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
     for (x, y), color in locked_positions.items():
         if 0 <= y < GRID_HEIGHT and 0 <= x < GRID_WIDTH:
@@ -101,8 +107,10 @@ def create_grid(locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]]) -
     return grid
 
 
-def valid_space(grid: List[List[Tuple[int, int, int]]], positions: List[Tuple[int, int]]) -> bool:
-    for (x, y) in positions:
+def valid_space(
+    grid: List[List[Tuple[int, int, int]]], positions: List[Tuple[int, int]]
+) -> bool:
+    for x, y in positions:
         if x < 0 or x >= GRID_WIDTH or y >= GRID_HEIGHT:
             return False
         if y >= 0:
@@ -113,7 +121,7 @@ def valid_space(grid: List[List[Tuple[int, int, int]]], positions: List[Tuple[in
 
 def check_lost(locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]]) -> bool:
     # If any locked block is above the visible grid (y < 0) or at y==0 covered on spawn area
-    for (_, y) in locked_positions.keys():
+    for _, y in locked_positions.keys():
         if y < 0:
             return True
     return False
@@ -127,7 +135,10 @@ def get_shape() -> Piece:
     return Piece(key, start_x, start_y)
 
 
-def clear_rows(grid: List[List[Tuple[int, int, int]]], locked: Dict[Tuple[int, int], Tuple[int, int, int]]):
+def clear_rows(
+    grid: List[List[Tuple[int, int, int]]],
+    locked: Dict[Tuple[int, int], Tuple[int, int, int]],
+):
     # Remove full rows and shift everything above down
     lines_cleared = 0
     for y in range(GRID_HEIGHT - 1, -1, -1):
@@ -153,39 +164,66 @@ def clear_rows(grid: List[List[Tuple[int, int, int]]], locked: Dict[Tuple[int, i
 # Rendering
 # ============================
 
+
 def draw_grid_lines(surface):
     # Draw the grid lines on playfield
     for y in range(GRID_HEIGHT + 1):
-        pygame.draw.line(surface, LIGHT_GRAY,
-                         (PLAY_TOP_LEFT_X, PLAY_TOP_LEFT_Y + y * CELL_SIZE),
-                         (PLAY_TOP_LEFT_X + PLAY_WIDTH, PLAY_TOP_LEFT_Y + y * CELL_SIZE), 1)
+        pygame.draw.line(
+            surface,
+            LIGHT_GRAY,
+            (PLAY_TOP_LEFT_X, PLAY_TOP_LEFT_Y + y * CELL_SIZE),
+            (PLAY_TOP_LEFT_X + PLAY_WIDTH, PLAY_TOP_LEFT_Y + y * CELL_SIZE),
+            1,
+        )
     for x in range(GRID_WIDTH + 1):
-        pygame.draw.line(surface, LIGHT_GRAY,
-                         (PLAY_TOP_LEFT_X + x * CELL_SIZE, PLAY_TOP_LEFT_Y),
-                         (PLAY_TOP_LEFT_X + x * CELL_SIZE, PLAY_TOP_LEFT_Y + PLAY_HEIGHT), 1)
+        pygame.draw.line(
+            surface,
+            LIGHT_GRAY,
+            (PLAY_TOP_LEFT_X + x * CELL_SIZE, PLAY_TOP_LEFT_Y),
+            (PLAY_TOP_LEFT_X + x * CELL_SIZE, PLAY_TOP_LEFT_Y + PLAY_HEIGHT),
+            1,
+        )
 
 
-def draw_window(surface, grid, score, level, next_piece: Piece, paused: bool, game_over: bool, font, small_font):
+def draw_window(
+    surface,
+    grid,
+    score,
+    level,
+    next_piece: Piece,
+    paused: bool,
+    game_over: bool,
+    font,
+    small_font,
+):
     surface.fill(GRAY)
 
     # Title
-    title_text = font.render('TETRIS', True, WHITE)
+    title_text = font.render("TETRIS", True, WHITE)
     surface.blit(title_text, (TOP_LEFT_X, 0))
 
     # Draw playfield background
-    pygame.draw.rect(surface, (20, 20, 20), (PLAY_TOP_LEFT_X, PLAY_TOP_LEFT_Y, PLAY_WIDTH, PLAY_HEIGHT))
+    pygame.draw.rect(
+        surface,
+        (20, 20, 20),
+        (PLAY_TOP_LEFT_X, PLAY_TOP_LEFT_Y, PLAY_WIDTH, PLAY_HEIGHT),
+    )
 
     # Draw cells
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
             color = grid[y][x]
             if color != BLACK:
-                pygame.draw.rect(surface, color, (
-                    PLAY_TOP_LEFT_X + x * CELL_SIZE + 1,
-                    PLAY_TOP_LEFT_Y + y * CELL_SIZE + 1,
-                    CELL_SIZE - 2,
-                    CELL_SIZE - 2
-                ))
+                pygame.draw.rect(
+                    surface,
+                    color,
+                    (
+                        PLAY_TOP_LEFT_X + x * CELL_SIZE + 1,
+                        PLAY_TOP_LEFT_Y + y * CELL_SIZE + 1,
+                        CELL_SIZE - 2,
+                        CELL_SIZE - 2,
+                    ),
+                )
 
     draw_grid_lines(surface)
 
@@ -193,13 +231,13 @@ def draw_window(surface, grid, score, level, next_piece: Piece, paused: bool, ga
     side_x = PLAY_TOP_LEFT_X + PLAY_WIDTH + 20
     side_y = PLAY_TOP_LEFT_Y
 
-    score_text = small_font.render(f'Score: {score}', True, WHITE)
-    level_text = small_font.render(f'Level: {level}', True, WHITE)
+    score_text = small_font.render(f"Score: {score}", True, WHITE)
+    level_text = small_font.render(f"Level: {level}", True, WHITE)
     surface.blit(score_text, (side_x, side_y))
     surface.blit(level_text, (side_x, side_y + 30))
 
     # Next piece
-    next_text = small_font.render('Next:', True, WHITE)
+    next_text = small_font.render("Next:", True, WHITE)
     surface.blit(next_text, (side_x, side_y + 80))
 
     # Draw next piece at side panel
@@ -208,30 +246,50 @@ def draw_window(surface, grid, score, level, next_piece: Piece, paused: bool, ga
         # Center in a 4x4 preview box
         preview_origin_x = side_x + 60
         preview_origin_y = side_y + 130
-        for (cx, cy) in cells:
+        for cx, cy in cells:
             px = preview_origin_x + (cx) * CELL_SIZE
             py = preview_origin_y + (cy) * CELL_SIZE
-            pygame.draw.rect(surface, next_piece.color, (px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2))
+            pygame.draw.rect(
+                surface,
+                next_piece.color,
+                (px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2),
+            )
         # Box
         pygame.draw.rect(surface, LIGHT_GRAY, (side_x + 10, side_y + 100, 150, 150), 2)
 
     if paused and not game_over:
-        ptext = font.render('PAUSED', True, WHITE)
-        surface.blit(ptext, (PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - ptext.get_width() // 2,
-                             PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - ptext.get_height() // 2))
+        ptext = font.render("PAUSED", True, WHITE)
+        surface.blit(
+            ptext,
+            (
+                PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - ptext.get_width() // 2,
+                PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - ptext.get_height() // 2,
+            ),
+        )
 
     if game_over:
-        gtext = font.render('GAME OVER', True, WHITE)
-        rtext = small_font.render('Press R to Restart', True, WHITE)
-        surface.blit(gtext, (PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - gtext.get_width() // 2,
-                             PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - gtext.get_height() // 2 - 20))
-        surface.blit(rtext, (PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - rtext.get_width() // 2,
-                             PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - rtext.get_height() // 2 + 30))
+        gtext = font.render("GAME OVER", True, WHITE)
+        rtext = small_font.render("Press R to Restart", True, WHITE)
+        surface.blit(
+            gtext,
+            (
+                PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - gtext.get_width() // 2,
+                PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - gtext.get_height() // 2 - 20,
+            ),
+        )
+        surface.blit(
+            rtext,
+            (
+                PLAY_TOP_LEFT_X + PLAY_WIDTH // 2 - rtext.get_width() // 2,
+                PLAY_TOP_LEFT_Y + PLAY_HEIGHT // 2 - rtext.get_height() // 2 + 30,
+            ),
+        )
 
 
 # ============================
 # Game Logic
 # ============================
+
 
 def attempt_move(grid, piece: Piece, dx: int, dy: int) -> bool:
     new_positions = piece.absolute_positions(dx=dx, dy=dy)
@@ -268,7 +326,7 @@ def hard_drop(grid, piece: Piece) -> int:
 
 
 def lock_piece(piece: Piece, locked: Dict[Tuple[int, int], Tuple[int, int, int]]):
-    for (x, y) in piece.absolute_positions():
+    for x, y in piece.absolute_positions():
         locked[(x, y)] = piece.color
 
 
@@ -276,14 +334,17 @@ def lock_piece(piece: Piece, locked: Dict[Tuple[int, int], Tuple[int, int, int]]
 # Main Game Loop
 # ============================
 
+
 def main():
     pygame.init()
-    pygame.display.set_caption('Tetris (Pygame)')
-    screen = pygame.display.set_mode((WINDOW_WIDTH + TOP_LEFT_X * 2, WINDOW_HEIGHT + TOP_LEFT_Y))
+    pygame.display.set_caption("Tetris (Pygame)")
+    screen = pygame.display.set_mode(
+        (WINDOW_WIDTH + TOP_LEFT_X * 2, WINDOW_HEIGHT + TOP_LEFT_Y)
+    )
     clock = pygame.time.Clock()
 
-    font = pygame.font.SysFont('arial', 36, bold=True)
-    small_font = pygame.font.SysFont('arial', 22)
+    font = pygame.font.SysFont("arial", 36, bold=True)
+    small_font = pygame.font.SysFont("arial", 22)
 
     locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]] = {}
     grid = create_grid(locked_positions)
@@ -373,17 +434,19 @@ def main():
         # Draw current state
         grid = create_grid(locked_positions)
         # place current piece on the grid preview (do not lock)
-        for (x, y) in current_piece.absolute_positions():
+        for x, y in current_piece.absolute_positions():
             if y >= 0:
                 if 0 <= x < GRID_WIDTH and 0 <= y < GRID_HEIGHT:
                     grid[y][x] = current_piece.color
 
-        draw_window(screen, grid, score, level, next_piece, paused, game_over, font, small_font)
+        draw_window(
+            screen, grid, score, level, next_piece, paused, game_over, font, small_font
+        )
         pygame.display.update()
 
     pygame.quit()
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
